@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
-    email: str
+    username: str
 
 
 class UserCreate(UserBase):
@@ -10,10 +10,15 @@ class UserCreate(UserBase):
 
 
 class User(UserBase):
-    id: int
-    is_active: bool
+    is_active: bool = True
+    email: str | None = None
+    full_name: str | None = None
 
     # Tells pydantic this will be used with an orm
     # https://docs.pydantic.dev/1.10/usage/model_config/
     class Config:
         from_attributes = True
+
+
+class UserInDB(User):
+    hashed_password: str

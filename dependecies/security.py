@@ -1,29 +1,42 @@
-from fastapi import Depends
-from pydantic import BaseModel
+import jwt
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
+from jwt.exceptions import InvalidTokenError
 
-SECRET_KEY = "1bc9caaa9715317cdab067fa6cc30bdfad42298ac27b4766307bb32ce67d5f13"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from schemas.token import TokenData
+from schemas.user import User
+from security import ALGORITHM, SECRET_KEY, fake_users_db, get_user
 
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    pass
+    # Define exception to return for invalid credenetials
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
+    # Decode token to read username - raise exception if no username provided
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
 
-# Move to models.py
-class User(BaseModel):
-    username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
+    # Find user in fake users db - this will be replaced by a database look up...
+    user = get_user(fake_users_db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    pass
+    """Takes current user and checks if the account is marked as disabled"""
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
