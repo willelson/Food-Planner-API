@@ -24,14 +24,10 @@ def get_password_hash(password):
 
 
 def get_user(db: Session, username: str):
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        return None
-    return UserInDB(**user.__dict__)
+    return db.query(User).filter(User.username == username).first()
 
 
 def authenticate_user(db: Session, username: str, password: str):
-
     user = get_user(db, username)
 
     if not user:
