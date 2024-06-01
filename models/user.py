@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy.orm import relationship
 
 from database import Base
 
@@ -12,3 +13,6 @@ class User(Base):
     fill_name = Column(String)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+
+    collections = relationship("Collection", back_populates="user")
+    recipes = relationship("Recipe", back_populates="user")

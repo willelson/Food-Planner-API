@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from dependecies.database import get_db
-from schemas.user import User, UserCreate
+from schemas.user import User as UserSchema, UserCreate
 from models.user import User as UserModel
 from security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -38,7 +38,7 @@ async def login_for_access_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/register", response_model=User)
+@router.post("/register", response_model=UserSchema)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user(db, user.username)
 
@@ -57,3 +57,10 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@router.post("/users", response_model=list[UserSchema])
+async def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(UserModel).all()
+    print(users[0].collections)
+    return users
