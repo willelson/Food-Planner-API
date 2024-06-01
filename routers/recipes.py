@@ -39,7 +39,7 @@ async def create_recipe(recipe: Recipe):
     return recipe
 
 
-@router.get("/{recipe}", response_model=Recipe)
+@router.get("/{recipe_id}", response_model=Recipe)
 async def get_recipe_by_id(recipe_id: int):
     recipe = fake_recipes_db.get(recipe_id)
 
