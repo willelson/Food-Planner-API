@@ -6,7 +6,7 @@ class RecipeBase(BaseModel):
     title: str
     description: str | None = None
     source_url: str
-    imageUrl: str
+    image_url: str
     created_at: datetime
     last_updated: datetime
 
