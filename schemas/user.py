@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class UserBase(BaseModel):
     username: str
+    email: str | None = None
 
 
 class UserCreate(UserBase):
@@ -11,7 +12,6 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     is_active: bool = True
-    email: str | None = None
     full_name: str | None = None
 
     # Tells pydantic this will be used with an orm

@@ -1,8 +1,12 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 
-from routers.recipes import router as recipes_router
-from routers.collections import router as collections_router
+from database import Base, engine
 from routers.auth import router as auth_router
+from routers.collections import router as collections_router
+from routers.recipes import router as recipes_router
+
+# Using declarative base - this updates tables to reflect our models
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

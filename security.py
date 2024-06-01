@@ -2,7 +2,9 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 
+from models.user import User
 from schemas.user import UserInDB
 
 SECRET_KEY = "move-this-to-an-environemnt-variable"
@@ -11,8 +13,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-fake_users_db = {}
 
 
 def verify_password(plain_password, hashed_password):
@@ -23,17 +23,16 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db, username: str):
-    print(f"get_user - username = {username}")
-    if username in db:
-        user_dict = db[username]
-        print(user_dict)
-        return UserInDB(**user_dict)
+def get_user(db: Session, username: str):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return None
+    return UserInDB(**user.__dict__)
 
 
-def authenticate_user(username: str, password: str):
+def authenticate_user(db: Session, username: str, password: str):
 
-    user = get_user(fake_users_db, username)
+    user = get_user(db, username)
 
     if not user:
         return False
