@@ -1,11 +1,12 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
 class CollectionBase(BaseModel):
     title: str
     description: str | None = None
-    url: str
-    imageUrl: str
+    created_at: datetime
+    last_updated: datetime
 
 
 class CollectionCreate(CollectionBase):

@@ -1,7 +1,6 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
-
-# from ..models.collection import Collection
+from fastapi import APIRouter, Depends, HTTPException, status
+from schemas.collection import Collection
 
 router = APIRouter(prefix="/collections", tags=["collections"])
 
@@ -23,17 +22,26 @@ collection2 = {
     "recipes": [],
 }
 
+fake_collections_db = {12: collection1, 33: collection2}
 
-@router.get("/")
+
+@router.get("/", response_model=list[Collection])
 async def read_user_collections():
-    return {"collections": [collection1, collection2]}
+    return [collection1, collection2]
 
 
-@router.post("/")
-async def create_collection():
-    return {"collections": ["collection 1", "collection 2"]}
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_collection(collection: Collection):
+    return collection
 
 
-@router.get("/{collection_id}")
+@router.get("/{collection_id}", response_model=Collection)
 async def get_collection_by_id(collection_id: int):
-    return {"collection": collection1, "collection_id": collection_id}
+    collection = fake_collections_db.get(collection_id)
+
+    if not collection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
+        )
+
+    return collection

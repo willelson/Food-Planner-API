@@ -1,11 +1,11 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from ..database import Base
+from database import Base
 
 
-class Recipe(Base):
-    __tablename__ = "recipes"
+class Collection(Base):
+    __tablename__ = "collection"
 
     id = Column(Integer, primary_key=True)
     title = Column(String, index=True)
