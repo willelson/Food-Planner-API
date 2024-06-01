@@ -16,4 +16,4 @@ class User(UserBase):
     # Tells pydantic this will be used with an orm
     # https://docs.pydantic.dev/1.10/usage/model_config/
     class Config:
-        orm_mode = True
+        from_attributes = True
