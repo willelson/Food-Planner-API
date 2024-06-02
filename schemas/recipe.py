@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -7,15 +8,19 @@ class RecipeBase(BaseModel):
     description: str | None = None
     source_url: str
     image_url: str
-    created_at: datetime
-    last_updated: datetime
 
 
 class RecipeCreate(RecipeBase):
+    created_at: datetime
+
+
+class RecipeUpdate(RecipeBase):
     pass
 
 
 class Recipe(RecipeBase):
+    created_at: datetime
+    last_updated: datetime
     id: int
 
     class Config:

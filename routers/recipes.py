@@ -7,6 +7,7 @@ from dependecies.security import get_current_active_user
 from models.collection_recipes import Recipe as RecipeModel
 from schemas.recipe import Recipe as RecipeSchema
 from schemas.recipe import RecipeCreate as RecipeCreateSchema
+from schemas.recipe import RecipeUpdate as RecipeUpdateSchema
 from schemas.user import User as UserSchema
 
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
@@ -33,6 +34,22 @@ async def create_recipe(
     db.commit()
     db.refresh(new_recipe)
     return recipe
+
+
+@router.put(
+    "/{recipe_id}", status_code=status.HTTP_202_ACCEPTED, response_model=RecipeSchema
+)
+async def update_recipe(
+    updated_recipe: RecipeUpdateSchema,
+    current_recipe: RecipeModel = Depends(get_user_recipe),
+    db: Session = Depends(get_db),
+):
+    for [column, value] in updated_recipe.__dict__.items():
+        setattr(current_recipe, column, value)
+
+    db.commit()
+
+    return current_recipe
 
 
 @router.get("/{recipe_id}", response_model=RecipeSchema)
