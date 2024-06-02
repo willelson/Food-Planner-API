@@ -1,18 +1,19 @@
-from datetime import datetime
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
+from dependecies.collection_recipes import get_user_collection, get_user_recipe
 from dependecies.database import get_db
 from dependecies.security import get_current_active_user
 from models.collection_recipes import Collection as CollectionModel
+from models.collection_recipes import Recipe as RecipeModel
 from schemas.collection import Collection as CollectionSchema
 from schemas.collection import CollectionCreate as CollectionCreateSchema
+from schemas.recipe import Recipe as RecipeSchema
 from schemas.user import User as UserSchema
 
 router = APIRouter(
     prefix="/collections",
-    tags=["collections"],
+    tags=["Collections"],
 )
 
 
@@ -41,48 +42,49 @@ async def create_collection(
 
 @router.get("/{collection_id}", response_model=CollectionSchema)
 async def get_collection_by_id(
-    collection_id: int,
-    current_user: UserSchema = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
+    collection: CollectionModel = Depends(get_user_collection),
 ):
-    collection = (
-        db.query(CollectionModel)
-        .filter(
-            CollectionModel.id == collection_id,
-            CollectionModel.user_id == current_user.id,
-        )
-        .first()
-    )
-
-    if not collection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
-        )
-
     return collection
 
 
 @router.delete("/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_collection(
-    collection_id: int,
-    current_user: UserSchema = Depends(get_current_active_user),
+    collection: CollectionModel = Depends(get_user_collection),
     db: Session = Depends(get_db),
 ):
-    collection = (
-        db.query(CollectionModel)
-        .filter(
-            CollectionModel.id == collection_id,
-            CollectionModel.user_id == current_user.id,
-        )
-        .first()
-    )
-
-    if not collection:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
-        )
-
     db.delete(collection)
     db.commit()
 
     return {"message": "collection successfully deleted"}
+
+
+@router.get("/{collection_id}/recipes", response_model=list[RecipeSchema])
+async def read_collection_recipes(
+    collection: CollectionModel = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+    return collection.recipes
+
+
+@router.post(
+    "/{collection_id}/recipes/{recipe_id}",
+)
+async def add_recipe_to_collection(
+    recipe: RecipeModel = Depends(get_user_recipe),
+    collection: CollectionModel = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+    collection.recipes.append(recipe)
+    db.commit()
+
+
+@router.delete(
+    "/{collection_id}/recipes/{recipe_id}", status_code=status.HTTP_202_ACCEPTED
+)
+async def delete_recipe_from_collection(
+    recipe: RecipeModel = Depends(get_user_recipe),
+    collection: CollectionModel = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+    collection.recipes.remove(recipe)
+    db.commit()

@@ -15,7 +15,7 @@ from security import (
     get_user,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["User Auth"])
 
 
 @router.post("/token")
