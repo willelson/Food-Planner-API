@@ -8,7 +8,7 @@ from models.user import User
 
 SECRET_KEY = "move-this-to-an-environemnt-variable"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
