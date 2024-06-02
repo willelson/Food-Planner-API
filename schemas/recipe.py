@@ -16,7 +16,7 @@ class RecipeCreate(RecipeBase):
 
 
 class Recipe(RecipeBase):
-    pass
+    id: int
 
     class Config:
         from_attributes = True

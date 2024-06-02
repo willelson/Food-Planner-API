@@ -16,13 +16,16 @@ class User(UserBase):
     id: int
     is_active: bool = True
     full_name: str | None = None
-    recipes: list[Recipe] = []
-    collections: list[Collection] = []
 
     # Tells pydantic this will be used with an orm
     # https://docs.pydantic.dev/1.10/usage/model_config/
     class Config:
         from_attributes = True
+
+
+class UserFull(User):
+    recipes: list[Recipe] = []
+    collections: list[Collection] = []
 
 
 class UserInDB(User):
