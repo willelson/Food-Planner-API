@@ -60,3 +60,29 @@ async def get_collection_by_id(
         )
 
     return collection
+
+
+@router.delete("/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_collection(
+    collection_id: int,
+    current_user: UserSchema = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    collection = (
+        db.query(CollectionModel)
+        .filter(
+            CollectionModel.id == collection_id,
+            CollectionModel.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if not collection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Collection not found"
+        )
+
+    db.delete(collection)
+    db.commit()
+
+    return {"message": "collection successfully deleted"}
