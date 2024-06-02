@@ -7,6 +7,7 @@ from dependecies.database import get_db
 from dependecies.security import get_current_active_user
 from models.collection_recipes import Collection as CollectionModel
 from schemas.collection import Collection as CollectionSchema
+from schemas.collection import CollectionCreate as CollectionCreateSchema
 from schemas.user import User as UserSchema
 
 router = APIRouter(
@@ -24,7 +25,7 @@ async def read_user_collections(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_collection(
-    collection: CollectionSchema,
+    collection: CollectionCreateSchema,
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):

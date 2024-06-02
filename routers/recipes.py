@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -7,6 +5,7 @@ from dependecies.database import get_db
 from dependecies.security import get_current_active_user
 from models.collection_recipes import Recipe as RecipeModel
 from schemas.recipe import Recipe as RecipeSchema
+from schemas.recipe import RecipeCreate as RecipeCreateSchema
 from schemas.user import User as UserSchema
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
@@ -21,7 +20,7 @@ async def read_user_recipes(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_recipe(
-    recipe: RecipeSchema,
+    recipe: RecipeCreateSchema,
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):

@@ -5,7 +5,6 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from models.user import User
-from schemas.user import UserInDB
 
 SECRET_KEY = "move-this-to-an-environemnt-variable"
 ALGORITHM = "HS256"
