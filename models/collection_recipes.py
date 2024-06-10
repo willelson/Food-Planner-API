@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 
 from database import Base
-
 
 collection_recipes = Table(
     "collection_recipes",
@@ -19,7 +20,7 @@ class Collection(Base):
     title = Column(String, index=True)
     description = Column(String, index=True)
     created_at = Column(DateTime)
-    last_updated = Column(DateTime)
+    last_updated = Column(DateTime, default=datetime.now())
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="collections")
@@ -27,6 +28,9 @@ class Collection(Base):
     recipes = relationship(
         "Recipe", secondary=collection_recipes, back_populates="collections"
     )
+
+    def __repr__(self):
+        return f"Collection: {self.title}"
 
 
 class Recipe(Base):
@@ -38,7 +42,7 @@ class Recipe(Base):
     source_url = Column(String)
     image_url = Column(String)
     created_at = Column(DateTime)
-    last_updated = Column(DateTime)
+    last_updated = Column(DateTime, default=datetime.now())
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="recipes")
@@ -46,3 +50,10 @@ class Recipe(Base):
     collections = relationship(
         "Collection", secondary=collection_recipes, back_populates="recipes"
     )
+
+    calendar_entries = relationship(
+        "CalendarEntry", back_populates="recipe", cascade="delete"
+    )
+
+    def __repr__(self):
+        return f"Recipe {self.title}"

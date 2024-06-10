@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -11,7 +11,13 @@ class CalendarEntry(Base):
     created_at = Column(DateTime)
     entry_date = Column(DateTime, index=True)
 
-    recipe_id = relationship("Recipe", back_populates="recipes")
+    recipe_id = Column(Integer, ForeignKey("recipes.id"))
+    recipe = relationship("Recipe")
 
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    owner = relationship("User", back_populates="calendar_entries")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User")
+
+    def __repr__(self):
+        return (
+            f"Calendar entry - user: {self.user.username} | recipe: {self.recipe.title}"
+        )

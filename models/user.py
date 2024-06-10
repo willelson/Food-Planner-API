@@ -16,3 +16,7 @@ class User(Base):
 
     collections = relationship("Collection", back_populates="user")
     recipes = relationship("Recipe", back_populates="user")
+    calendar_entries = relationship("CalendarEntry", back_populates="user")
+
+    def __repr__(self):
+        return f"User: {self.username}"

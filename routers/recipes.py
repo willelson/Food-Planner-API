@@ -52,6 +52,17 @@ async def update_recipe(
     return current_recipe
 
 
+@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_recipe(
+    recipe: RecipeModel = Depends(get_user_recipe),
+    db: Session = Depends(get_db),
+):
+    db.delete(recipe)
+    db.commit()
+
+    return {"message": "recipe successfully deleted"}
+
+
 @router.get("/{recipe_id}", response_model=RecipeSchema)
 async def get_recipe_by_id(
     recipe: RecipeModel = Depends(get_user_recipe),

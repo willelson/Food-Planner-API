@@ -1,10 +1,14 @@
+from datetime import datetime
+
 from pydantic import BaseModel
+
+from .recipe import Recipe
 
 
 class CalendarEntryBase(BaseModel):
-    entry_date: str
-    created_at: str | None = None
-    recipe: int
+    entry_date: datetime
+    created_at: datetime
+    recipe_id: int
 
 
 class CalendarEntryCreate(CalendarEntryBase):
@@ -13,7 +17,8 @@ class CalendarEntryCreate(CalendarEntryBase):
 
 class CalendarEntry(CalendarEntryBase):
     id: int
-    owner_id: int
+    user_id: int
+    recipe: Recipe
 
     class Config:
         from_attributes = True
