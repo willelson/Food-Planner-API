@@ -15,8 +15,3 @@ app.include_router(auth_router)
 app.include_router(recipes_router)
 app.include_router(collections_router)
 app.include_router(calendar_entries_router)
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello bigger applications"}
