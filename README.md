@@ -6,25 +6,33 @@ Created with Python [Fast API](https://fastapi.tiangolo.com/).
 
 ## Installation
 
-Create your virtual environment
+Create your virtual environment.
 
 ```
 python3 -m venv env
 ```
 
-Activate the virtual environment
+Activate the virtual environment.
 
 ```
 source env/bin/activate
 ```
 
-Install the requirements
+Install the requirements.
 
 ```
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
-Run the project
+To set up environment variables create a `.env` file in the root directory, and add your secret key.
+
+```
+SECRET_KEY=<your secret key>
+```
+
+## Run the project
+
+Start the dev server.
 
 ```
 uvicorn main:app --reload

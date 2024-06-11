@@ -62,5 +62,4 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/users", response_model=list[UserSchema])
 async def get_all_users(db: Session = Depends(get_db)):
     users = db.query(UserModel).all()
-    print(users[0].collections)
     return users

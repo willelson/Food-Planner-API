@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from models.user import User
 
-SECRET_KEY = "move-this-to-an-environemnt-variable"
+SECRET_KEY = os.environ["SECRET_KEY"]
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

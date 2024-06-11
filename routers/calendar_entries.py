@@ -34,7 +34,6 @@ async def create_calendar_entry(
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    print("create calendar_entry")
     new_calendar_entry = CalendarEntryModel(**calendar_entry.__dict__)
     new_calendar_entry.user_id = current_user.id
 
@@ -68,10 +67,3 @@ async def delete_calendar_entry(
     db.commit()
 
     return {"message": "calendar entry successfully deleted"}
-
-
-@router.get("/{calendar_id}", response_model=CalendarEntrySchema)
-async def get_calendar_entry_by_id(
-    calendar_id: int,
-):
-    return calendar_id
