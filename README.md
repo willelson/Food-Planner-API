@@ -4,6 +4,13 @@ This RESTful API enables users to save recipes, add them to collections and plan
 
 Created with Python [Fast API](https://fastapi.tiangolo.com/).
 
+## Features
+
+- Secure user authenticaion with OAuth2
+- Save favourite recipes
+- Organise saved recipes into collections
+- Add calendar entries to plan recipes
+
 ## Installation
 
 Create your virtual environment.
