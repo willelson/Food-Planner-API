@@ -15,9 +15,20 @@ router = APIRouter(prefix="/recipes", tags=["Recipes"])
 
 @router.get("/", response_model=list[RecipeSchema])
 async def read_user_recipes(
+    query: str = "",
     current_user: UserSchema = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
 ):
-    return current_user.recipes
+    user_recipes = (
+        db.query(RecipeModel)
+        .filter(
+            RecipeModel.user_id == current_user.id,
+            RecipeModel.title.like(f"%{query}%"),
+        )
+        .all()
+    )
+
+    return user_recipes
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

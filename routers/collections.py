@@ -6,6 +6,7 @@ from dependecies.database import get_db
 from dependecies.security import get_current_active_user
 from models.collection_recipes import Collection as CollectionModel
 from models.collection_recipes import Recipe as RecipeModel
+from models.collection_recipes import collection_recipes
 from schemas.collection import Collection as CollectionSchema
 from schemas.collection import CollectionCreate as CollectionCreateSchema
 from schemas.recipe import Recipe as RecipeSchema
@@ -19,9 +20,20 @@ router = APIRouter(
 
 @router.get("/", response_model=list[CollectionSchema])
 async def read_user_collections(
+    query: str = "",
     current_user: UserSchema = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
 ):
-    return current_user.collections
+    collections = (
+        db.query(CollectionModel)
+        .filter(
+            CollectionModel.user_id == current_user.id,
+            CollectionModel.title.ilike(f"%{query}%"),
+        )
+        .all()
+    )
+
+    return collections
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -30,7 +42,6 @@ async def create_collection(
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-
     new_collection = CollectionModel(**collection.__dict__)
     new_collection.user_id = current_user.id
 
@@ -60,10 +71,21 @@ async def delete_collection(
 
 @router.get("/{collection_id}/recipes", response_model=list[RecipeSchema])
 async def read_collection_recipes(
+    query: str = "",
     collection: CollectionModel = Depends(get_user_collection),
     db: Session = Depends(get_db),
 ):
-    return collection.recipes
+    recipes_query = (
+        db.query(RecipeModel)
+        .join(collection_recipes)
+        .filter(collection_recipes.c.collection_id == collection.id)
+    )
+
+    if query:
+        recipes_query = recipes_query.filter(RecipeModel.title.ilike(f"%{query}%"))
+
+    recipes = recipes_query.all()
+    return recipes
 
 
 @router.post(
