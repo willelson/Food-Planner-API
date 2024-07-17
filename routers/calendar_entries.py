@@ -7,6 +7,7 @@ from dependecies.security import get_current_active_user
 from models.calendar_entry import CalendarEntry as CalendarEntryModel
 from schemas.calendar_entry import CalendarEntry as CalendarEntrySchema
 from schemas.calendar_entry import CalendarEntryCreate as CalendarEntryCreateSchema
+from schemas.calendar_entry import DateRange
 from schemas.user import User as UserSchema
 
 router = APIRouter(
@@ -23,9 +24,21 @@ async def get_all_calendar_entries(db: Session = Depends(get_db)):
 
 @router.get("/", response_model=list[CalendarEntrySchema])
 async def read_user_calendar_entries(
+    db: Session = Depends(get_db),
     current_user: UserSchema = Depends(get_current_active_user),
+    date_range: DateRange = Depends(),
 ):
-    return current_user.calendar_entries
+
+    query = db.query(CalendarEntryModel).filter(
+        CalendarEntryModel.user_id == current_user.id
+    )
+
+    if date_range.start_date:
+        query = query.filter(CalendarEntryModel.entry_date >= date_range.start_date)
+    if date_range.end_date:
+        query = query.filter(CalendarEntryModel.entry_date <= date_range.end_date)
+
+    return query.all()
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -8,7 +8,7 @@ class CalendarEntry(Base):
     __tablename__ = "calendar_entries"
 
     id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     entry_date = Column(DateTime, index=True)
 
     recipe_id = Column(Integer, ForeignKey("recipes.id"))
