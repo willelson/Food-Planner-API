@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, func
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -19,8 +19,8 @@ class Collection(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String, index=True)
     description = Column(String, index=True)
-    created_at = Column(DateTime)
-    last_updated = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_updated = Column(DateTime(timezone=True), server_default=func.now())
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="collections")
@@ -41,8 +41,8 @@ class Recipe(Base):
     description = Column(String)
     source_url = Column(String)
     image_url = Column(String)
-    created_at = Column(DateTime)
-    last_updated = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_updated = Column(DateTime(timezone=True), server_default=func.now())
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="recipes")
