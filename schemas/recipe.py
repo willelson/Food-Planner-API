@@ -11,7 +11,7 @@ class RecipeBase(BaseModel):
 
 
 class RecipeCreate(RecipeBase):
-    created_at: datetime
+    pass
 
 
 class RecipeUpdate(RecipeBase):

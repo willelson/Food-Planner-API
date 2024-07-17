@@ -6,8 +6,6 @@ from pydantic import BaseModel
 class CollectionBase(BaseModel):
     title: str
     description: str | None = None
-    created_at: datetime
-    last_updated: datetime
 
 
 class CollectionCreate(CollectionBase):
@@ -16,6 +14,8 @@ class CollectionCreate(CollectionBase):
 
 class Collection(CollectionBase):
     id: int
+    created_at: datetime
+    last_updated: datetime
 
     class Config:
         from_attributes = True
