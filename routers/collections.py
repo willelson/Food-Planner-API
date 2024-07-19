@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from typing import Annotated, List
+
+from fastapi import APIRouter, Body, Depends, status
 from sqlalchemy.orm import Session
 
 from dependecies.collection_recipes import get_user_collection, get_user_recipe
@@ -36,7 +38,7 @@ async def read_user_collections(
     return collections
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=CollectionSchema)
 async def create_collection(
     collection: CollectionCreateSchema,
     current_user: UserSchema = Depends(get_current_active_user),
@@ -48,7 +50,7 @@ async def create_collection(
     db.add(new_collection)
     db.commit()
     db.refresh(new_collection)
-    return collection
+    return new_collection
 
 
 @router.get("/{collection_id}", response_model=CollectionSchema)
@@ -97,6 +99,20 @@ async def add_recipe_to_collection(
     db: Session = Depends(get_db),
 ):
     collection.recipes.append(recipe)
+    db.commit()
+
+
+@router.put("/{collection_id}/recipes")
+async def add_collection_recipes(
+    recipe_ids: Annotated[List[int], Body()],
+    collection: CollectionModel = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+
+    for recipe_id in recipe_ids:
+        recipe = db.query(RecipeModel).get(recipe_id)
+        collection.recipes.append(recipe)
+
     db.commit()
 
 
