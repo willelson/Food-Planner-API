@@ -36,7 +36,10 @@ async def read_user_calendar_entries(
     if date_range.start_date:
         query = query.filter(CalendarEntryModel.entry_date >= date_range.start_date)
     if date_range.end_date:
-        query = query.filter(CalendarEntryModel.entry_date <= date_range.end_date)
+        query = query.filter(
+            CalendarEntryModel.entry_date
+            <= date_range.end_date.replace(minute=59, hour=23, second=59)
+        )
 
     return query.all()
 
