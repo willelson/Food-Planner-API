@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from dependecies.collection_recipes import get_user_recipe
@@ -34,20 +36,59 @@ async def read_user_recipes(
     return query.all()
 
 
+@router.get(
+    "/image/{image_path}",
+    response_class=FileResponse,
+)
+async def get_recipe_image(image_path: str):
+    file_location = f"user_images/{image_path}"
+    return FileResponse(file_location)
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_recipe(
-    recipe: RecipeCreateSchema,
+    title: str = Form(),
+    image: UploadFile = File(None),
+    description: str = Form(None),
+    source_url: str = Form(None),
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
+    recipeData = {
+        "title": title,
+        "description": description or "",
+        "source_url": source_url or "",
+    }
 
-    new_recipe = RecipeModel(**recipe.__dict__)
+    if description:
+        recipeData["description"] = description
+
+    if source_url:
+        recipeData["source_url"] = source_url
+
+    new_recipe = RecipeModel(**recipeData)
     new_recipe.user_id = current_user.id
+
+    if image:
+        file_location = f"user_images/{image.filename}"
+
+        try:
+            im = Image.open(image.file)
+            if im.mode in ("RGBA", "P"):
+                im = im.convert("RGB")
+            im.save(file_location, "JPEG", quality=50)
+        except Exception:
+            raise HTTPException(status_code=500, detail="Something went wrong")
+        finally:
+            image.file.close()
+            im.close()
+
+        new_recipe.image_url = f"recipes/image/{image.filename}"
 
     db.add(new_recipe)
     db.commit()
     db.refresh(new_recipe)
-    return recipe
+    return new_recipe
 
 
 @router.put(
