@@ -1,4 +1,15 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from urllib.parse import urlparse
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import FileResponse
 from PIL import Image
 from sqlalchemy.orm import Session
@@ -47,6 +58,7 @@ async def get_recipe_image(image_path: str):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_recipe(
+    request: Request,
     title: str = Form(),
     image: UploadFile = File(None),
     description: str = Form(None),
@@ -72,6 +84,9 @@ async def create_recipe(
     if image:
         file_location = f"user_images/{image.filename}"
 
+        parsed_uri = urlparse(str(request.url))
+        server_base = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
+
         try:
             im = Image.open(image.file)
             if im.mode in ("RGBA", "P"):
@@ -83,7 +98,7 @@ async def create_recipe(
             image.file.close()
             im.close()
 
-        new_recipe.image_url = f"recipes/image/{image.filename}"
+        new_recipe.image_url = f"{server_base}/recipes/image/{image.filename}"
 
     db.add(new_recipe)
     db.commit()
