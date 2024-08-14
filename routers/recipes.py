@@ -56,6 +56,26 @@ async def get_recipe_image(image_path: str):
     return FileResponse(file_location)
 
 
+def save_image(request: Request, image: UploadFile = File(None)):
+    file_location = f"user_images/{image.filename}"
+
+    parsed_uri = urlparse(str(request.url))
+    server_base = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
+
+    try:
+        im = Image.open(image.file)
+        if im.mode in ("RGBA", "P"):
+            im = im.convert("RGB")
+        im.save(file_location, "JPEG", quality=50)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Something went wrong")
+    finally:
+        image.file.close()
+        im.close()
+
+    return f"{server_base}/recipes/image/{image.filename}"
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_recipe(
     request: Request,
@@ -66,39 +86,24 @@ async def create_recipe(
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
-    recipeData = {
+    recipe_data = {
         "title": title,
         "description": description or "",
         "source_url": source_url or "",
     }
 
     if description:
-        recipeData["description"] = description
+        recipe_data["description"] = description
 
     if source_url:
-        recipeData["source_url"] = source_url
+        recipe_data["source_url"] = source_url
 
-    new_recipe = RecipeModel(**recipeData)
+    new_recipe = RecipeModel(**recipe_data)
     new_recipe.user_id = current_user.id
 
     if image:
-        file_location = f"user_images/{image.filename}"
-
-        parsed_uri = urlparse(str(request.url))
-        server_base = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
-
-        try:
-            im = Image.open(image.file)
-            if im.mode in ("RGBA", "P"):
-                im = im.convert("RGB")
-            im.save(file_location, "JPEG", quality=50)
-        except Exception:
-            raise HTTPException(status_code=500, detail="Something went wrong")
-        finally:
-            image.file.close()
-            im.close()
-
-        new_recipe.image_url = f"{server_base}/recipes/image/{image.filename}"
+        file_location = save_image(request, image)
+        new_recipe.image_url = file_location
 
     db.add(new_recipe)
     db.commit()
@@ -110,12 +115,24 @@ async def create_recipe(
     "/{recipe_id}", status_code=status.HTTP_202_ACCEPTED, response_model=RecipeSchema
 )
 async def update_recipe(
-    updated_recipe: RecipeUpdateSchema,
+    request: Request,
+    title: str = Form(None),
+    image: UploadFile = File(None),
+    description: str = Form(None),
+    source_url: str = Form(None),
     current_recipe: RecipeModel = Depends(get_user_recipe),
     db: Session = Depends(get_db),
 ):
-    for [column, value] in updated_recipe.__dict__.items():
-        setattr(current_recipe, column, value)
+    if title:
+        setattr(current_recipe, "title", title)
+    if description:
+        setattr(current_recipe, "description", description)
+    if source_url:
+        setattr(current_recipe, "source_url", source_url)
+
+    if image:
+        file_location = save_image(request, image)
+        setattr(current_recipe, "image_url", file_location)
 
     db.commit()
 
