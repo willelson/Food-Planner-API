@@ -76,7 +76,7 @@ def save_image(request: Request, image: UploadFile = File(None)):
     return f"{server_base}/recipes/image/{image.filename}"
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=RecipeSchema)
 async def create_recipe(
     request: Request,
     title: str = Form(),
