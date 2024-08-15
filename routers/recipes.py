@@ -1,3 +1,4 @@
+from datetime import datetime
 from urllib.parse import urlparse
 
 from fastapi import (
@@ -20,8 +21,6 @@ from dependecies.security import get_current_active_user
 from models.collection_recipes import Recipe as RecipeModel
 from models.collection_recipes import collection_recipes
 from schemas.recipe import Recipe as RecipeSchema
-from schemas.recipe import RecipeCreate as RecipeCreateSchema
-from schemas.recipe import RecipeUpdate as RecipeUpdateSchema
 from schemas.user import User as UserSchema
 
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
@@ -53,6 +52,7 @@ async def read_user_recipes(
 )
 async def get_recipe_image(image_path: str):
     file_location = f"user_images/{image_path}"
+    # TODO: return 404 if file not found
     return FileResponse(file_location)
 
 
@@ -129,6 +129,8 @@ async def update_recipe(
         setattr(current_recipe, "description", description)
     if source_url:
         setattr(current_recipe, "source_url", source_url)
+
+    setattr(current_recipe, "last_updated", datetime.now())
 
     if image:
         file_location = save_image(request, image)
