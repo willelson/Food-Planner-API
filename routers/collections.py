@@ -90,16 +90,18 @@ async def read_collection_recipes(
     return recipes
 
 
-@router.post(
-    "/{collection_id}/recipes/{recipe_id}",
-)
+@router.post("/{collection_id}/recipes/{recipe_id}", response_model=CollectionSchema)
 async def add_recipe_to_collection(
     recipe: RecipeModel = Depends(get_user_recipe),
     collection: CollectionModel = Depends(get_user_collection),
     db: Session = Depends(get_db),
 ):
     collection.recipes.append(recipe)
+    if recipe.image_url:
+        collection.cover_image_url = recipe.image_url
     db.commit()
+
+    return collection
 
 
 @router.put("/{collection_id}/recipes")
@@ -112,6 +114,9 @@ async def add_collection_recipes(
     for recipe_id in recipe_ids:
         recipe = db.query(RecipeModel).get(recipe_id)
         collection.recipes.append(recipe)
+
+    last_recipe = db.query(RecipeModel).get(recipe_ids[-1])
+    collection.cover_image_url = last_recipe.image_url
 
     db.commit()
 

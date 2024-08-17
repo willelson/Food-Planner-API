@@ -10,6 +10,7 @@ collection_recipes = Table(
     Base.metadata,
     Column("collection_id", ForeignKey("collections.id"), primary_key=True),
     Column("recipe_id", ForeignKey("recipes.id"), primary_key=True),
+    Column("created_at", DateTime(timezone=True), server_default=func.now()),
 )
 
 
@@ -21,6 +22,7 @@ class Collection(Base):
     description = Column(String, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_updated = Column(DateTime(timezone=True), server_default=func.now())
+    cover_image_url = Column(String)
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="collections")
