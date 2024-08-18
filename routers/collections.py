@@ -97,8 +97,10 @@ async def add_recipe_to_collection(
     db: Session = Depends(get_db),
 ):
     collection.recipes.append(recipe)
-    if recipe.image_url:
+
+    if not collection.cover_image_url and recipe.image_url:
         collection.cover_image_url = recipe.image_url
+
     db.commit()
 
     return collection
@@ -113,10 +115,10 @@ async def add_collection_recipes(
 
     for recipe_id in recipe_ids:
         recipe = db.query(RecipeModel).get(recipe_id)
-        collection.recipes.append(recipe)
+        if not collection.cover_image_url:
+            collection.cover_image_url = recipe.image_url
 
-    last_recipe = db.query(RecipeModel).get(recipe_ids[-1])
-    collection.cover_image_url = last_recipe.image_url
+        collection.recipes.append(recipe)
 
     db.commit()
 
