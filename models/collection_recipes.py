@@ -45,6 +45,10 @@ class Recipe(Base):
     image_url = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_updated = Column(DateTime(timezone=True), server_default=func.now())
+    servings = Column(Integer)
+    cooking_time = Column(String)
+    ingredients = Column(String)
+    method = Column(String)
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="recipes")

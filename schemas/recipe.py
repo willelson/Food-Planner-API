@@ -8,6 +8,10 @@ class RecipeBase(BaseModel):
     description: str | None = None
     source_url: str
     image_url: str
+    ingredients: str | None = None
+    method: str | None = None
+    servings: int | None = None
+    cooking_time: str | None = None
 
 
 class RecipeCreate(RecipeBase):

@@ -76,6 +76,7 @@ def save_image(request: Request, image: UploadFile = File(None)):
     return f"{server_base}/recipes/image/{image.filename}"
 
 
+# TODO: create dependency for recipe form
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=RecipeSchema)
 async def create_recipe(
     request: Request,
@@ -83,6 +84,10 @@ async def create_recipe(
     image: UploadFile = File(None),
     description: str = Form(None),
     source_url: str = Form(None),
+    servings: int = Form(None),
+    cooking_time: str = Form(None),
+    ingredients: str = Form(None),
+    method: str = Form(None),
     current_user: UserSchema = Depends(get_current_active_user),
     db: Session = Depends(get_db),
 ):
@@ -90,13 +95,11 @@ async def create_recipe(
         "title": title,
         "description": description or "",
         "source_url": source_url or "",
+        "servings": servings or None,
+        "cooking_time": cooking_time or "",
+        "ingredients": ingredients or "",
+        "method": method or "",
     }
-
-    if description:
-        recipe_data["description"] = description
-
-    if source_url:
-        recipe_data["source_url"] = source_url
 
     new_recipe = RecipeModel(**recipe_data)
     new_recipe.user_id = current_user.id
@@ -120,6 +123,10 @@ async def update_recipe(
     image: UploadFile = File(None),
     description: str = Form(None),
     source_url: str = Form(None),
+    servings: int = Form(None),
+    cooking_time: str = Form(None),
+    ingredients: str = Form(None),
+    method: str = Form(None),
     current_recipe: RecipeModel = Depends(get_user_recipe),
     db: Session = Depends(get_db),
 ):
@@ -129,6 +136,14 @@ async def update_recipe(
         setattr(current_recipe, "description", description)
     if source_url:
         setattr(current_recipe, "source_url", source_url)
+    if servings:
+        setattr(current_recipe, "servings", servings)
+    if cooking_time:
+        setattr(current_recipe, "cooking_time", cooking_time)
+    if ingredients:
+        setattr(current_recipe, "ingredients", ingredients)
+    if method:
+        setattr(current_recipe, "method", method)
 
     setattr(current_recipe, "last_updated", datetime.now())
 
