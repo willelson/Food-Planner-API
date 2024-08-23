@@ -1,8 +1,10 @@
 from datetime import datetime
+from typing import Annotated, List
 from urllib.parse import urlparse
 
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     File,
     Form,
@@ -165,6 +167,25 @@ async def delete_recipe(
     db.commit()
 
     return {"message": "recipe successfully deleted"}
+
+
+@router.delete("/", status_code=status.HTTP_202_ACCEPTED)
+async def delete_recipes(
+    recipe_ids: Annotated[List[int], Body()],
+    current_user: UserSchema = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    for recipe_id in recipe_ids:
+        recipe = (
+            db.query(RecipeModel)
+            .filter(RecipeModel.user_id == current_user.id, RecipeModel.id == recipe_id)
+            .first()
+        )
+        db.delete(recipe)
+
+    db.commit()
+
+    return {"message": "recipes successfully deleted"}
 
 
 @router.get("/{recipe_id}", response_model=RecipeSchema)
