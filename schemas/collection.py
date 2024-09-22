@@ -31,3 +31,8 @@ class Collection(CollectionBase):
                 "cover_image_url": "http://localhost:8080/collections/cover_image",
             }
         }
+
+
+class CollectionUpdate(BaseModel):
+    title: str
+    description: str | None = None

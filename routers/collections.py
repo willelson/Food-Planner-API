@@ -1,6 +1,7 @@
 from typing import Annotated, List
 
 from fastapi import APIRouter, Body, Depends, status
+from sqlalchemy import asc
 from sqlalchemy.orm import Session
 
 from dependecies.collection_recipes import get_user_collection, get_user_recipe
@@ -11,6 +12,7 @@ from models.collection_recipes import Recipe as RecipeModel
 from models.collection_recipes import collection_recipes
 from schemas.collection import Collection as CollectionSchema
 from schemas.collection import CollectionCreate as CollectionCreateSchema
+from schemas.collection import CollectionUpdate
 from schemas.recipe import Recipe as RecipeSchema
 from schemas.user import User as UserSchema
 
@@ -51,6 +53,21 @@ async def create_collection(
     db.commit()
     db.refresh(new_collection)
     return new_collection
+
+
+@router.put(
+    "/{collection_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=CollectionSchema,
+)
+async def update(
+    collection: CollectionUpdate,
+    current_collection: CollectionSchema = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+    current_collection.title = collection.title
+    db.commit()
+    return current_collection
 
 
 @router.get("/{collection_id}", response_model=CollectionSchema)
@@ -114,13 +131,52 @@ async def add_collection_recipes(
 ):
 
     for recipe_id in recipe_ids:
+        # Check collection does not already have this recipe
+        collection_recipe = (
+            db.query(collection_recipes)
+            .filter(
+                collection_recipes.c.recipe_id == recipe_id,
+                collection_recipes.c.collection_id == collection.id,
+            )
+            .first()
+        )
+
+        if collection_recipe:
+            continue
+
         recipe = db.query(RecipeModel).get(recipe_id)
+
         if not collection.cover_image_url:
             collection.cover_image_url = recipe.image_url
 
         collection.recipes.append(recipe)
 
     db.commit()
+
+
+def get_new_collection_cover(
+    db: Session, collection_id: int, current_first_recipe_id: int
+):
+    """
+    Get the image of the first recipe in the collection to use as the collection cover image
+    current_first_recipe_id is being removed from the collection so we exclude it from the query
+    """
+
+    first_collection_recipe = (
+        db.query(collection_recipes)
+        .filter(
+            collection_recipes.c.collection_id == collection_id,
+            collection_recipes.c.recipe_id != current_first_recipe_id,
+        )
+        .order_by(asc("created_at"))
+        .first()
+    )
+
+    if not first_collection_recipe:
+        return None
+
+    first_recipe = db.query(RecipeModel).get(first_collection_recipe.recipe_id)
+    return first_recipe.image_url
 
 
 @router.delete(
@@ -132,4 +188,31 @@ async def delete_recipe_from_collection(
     db: Session = Depends(get_db),
 ):
     collection.recipes.remove(recipe)
+
+    if collection.cover_image_url == recipe.image_url:
+        # Update collection cover image url
+        collection.cover_image_url = get_new_collection_cover(
+            db, collection.id, recipe.id
+        )
+
+    db.commit()
+
+
+@router.delete("/{collection_id}/recipes")
+async def delete_collection_recipes(
+    recipe_ids: Annotated[List[int], Body()],
+    collection: CollectionModel = Depends(get_user_collection),
+    db: Session = Depends(get_db),
+):
+
+    for recipe_id in recipe_ids:
+        recipe = db.query(RecipeModel).get(recipe_id)
+        collection.recipes.remove(recipe)
+
+        if collection.cover_image_url == recipe.image_url:
+            # Update collection cover image url
+            collection.cover_image_url = get_new_collection_cover(
+                db, collection.id, recipe.id
+            )
+
     db.commit()
