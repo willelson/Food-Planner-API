@@ -1,7 +1,11 @@
+import random
+import string
 from datetime import datetime
+from io import BytesIO
 from typing import Annotated, List
 from urllib.parse import urlparse
 
+import requests
 from fastapi import (
     APIRouter,
     Body,
@@ -15,6 +19,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from PIL import Image
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from dependecies.collection_recipes import get_user_recipe
@@ -36,11 +41,11 @@ async def read_user_recipes(
     db: Session = Depends(get_db),
 ):
     query = db.query(RecipeModel).filter(
-        RecipeModel.user_id == current_user.id, RecipeModel.title.like(f"%{query}%")
+        RecipeModel.user_id == current_user.id,
+        RecipeModel.title.like(f"%{query}%"),
     )
 
     if collection_id:
-        print(f"collection_id = {collection_id}")
         query = query.join(collection_recipes).filter(
             collection_recipes.c.collection_id == collection_id
         )
@@ -58,8 +63,40 @@ async def get_recipe_image(image_path: str):
     return FileResponse(file_location)
 
 
+def id_generator(
+    size=16, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits
+):
+    return "".join(random.choice(chars) for _ in range(size))
+
+
+def generate_file_name():
+    filename = id_generator()
+    return f"user_images/{filename}.jpeg"
+
+
+def save_image_from_url(request: Request, image: bytes):
+    filename = id_generator() + ".jpeg"
+    file_location = f"user_images/{filename}"
+
+    parsed_uri = urlparse(str(request.url))
+    server_base = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
+
+    try:
+        im = Image.open(BytesIO(image))
+        if im.mode in ("RGBA", "P"):
+            im = im.convert("RGB")
+        im.save(file_location, "JPEG", quality=50, optimize=True)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Something went wrong")
+    finally:
+        im.close()
+
+    return f"{server_base}/recipes/image/{filename}"
+
+
 def save_image(request: Request, image: UploadFile = File(None)):
-    file_location = f"user_images/{image.filename}"
+    filename = id_generator() + ".jpeg"
+    file_location = f"user_images/{filename}"
 
     parsed_uri = urlparse(str(request.url))
     server_base = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
@@ -75,7 +112,7 @@ def save_image(request: Request, image: UploadFile = File(None)):
         image.file.close()
         im.close()
 
-    return f"{server_base}/recipes/image/{image.filename}"
+    return f"{server_base}/recipes/image/{filename}"
 
 
 # TODO: create dependency for recipe form
@@ -84,6 +121,7 @@ async def create_recipe(
     request: Request,
     title: str = Form(),
     image: UploadFile = File(None),
+    image_url: str = Form(None),
     description: str = Form(None),
     source_url: str = Form(None),
     servings: int = Form(None),
@@ -108,6 +146,11 @@ async def create_recipe(
 
     if image:
         file_location = save_image(request, image)
+        new_recipe.image_url = file_location
+
+    elif image_url:
+        image_content = requests.get(image_url).content
+        file_location = save_image_from_url(request, image_content)
         new_recipe.image_url = file_location
 
     db.add(new_recipe)

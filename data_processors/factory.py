@@ -4,8 +4,10 @@ from urllib.parse import urlparse
 import requests
 from linkpreview import link_preview
 
+from schemas.content import Content as ContentSchema
 
-def scrape_with_api_service(url):
+
+def scrape_with_api_service(url) -> ContentSchema:
     headers = {
         "Content-Type": "application/json; charset=utf-8",
         "X-Linkpreview-Api-Key": os.environ["LINK_PREVIEW_API_KEY"],
@@ -22,7 +24,7 @@ def scrape_with_api_service(url):
     return data
 
 
-def instagram_processor(url):
+def instagram_processor(url) -> ContentSchema:
     preview = link_preview(url)
 
     def no_data_returned(data):
@@ -36,13 +38,13 @@ def instagram_processor(url):
     return {
         "title": data["title"],
         "description": data["description"],
-        "image": data["image"],
-        "site_name": data["site_name"],
-        "source": url,
+        "image_url": data["image"],
+        "site_name": "www.instagram.com",
+        "source_url": url,
     }
 
 
-def generic_processor(url):
+def generic_processor(url) -> ContentSchema:
     preview = link_preview(url)
 
     data = preview.generic
@@ -50,9 +52,9 @@ def generic_processor(url):
     return {
         "title": data.title,
         "description": data.description,
-        "image": data.image,
+        "image_url": data.image,
         "site_name": data.site_name,
-        "source": url,
+        "source_url": url,
     }
 
 

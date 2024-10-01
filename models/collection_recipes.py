@@ -1,6 +1,15 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, func
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -49,6 +58,7 @@ class Recipe(Base):
     cooking_time = Column(String)
     ingredients = Column(String)
     method = Column(String)
+    site_name = Column(String)
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="recipes")
